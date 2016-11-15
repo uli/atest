@@ -1,0 +1,56 @@
+atest: Analog audio loopback test tool
+
+
+atest allows unattended testing of an analog ALSA device using a
+loopback cable that connects the output to the input on the same board.
+
+It uses the Q15X25 HAM radio codec to send different messages down the
+channels of the output and decodes what is recevied on the input. If the
+messages match, the test passes. If no valid data was received, or the
+message is not correct, the test fails. This allows detection of
+non-working as well as swapped audio channels.
+
+There are several command-line options:
+
+	-d	--device	ALSA device to use (default: "default")
+	-c	--channels	number of channels to test (default: 2)
+	-s	--samplerate	hardware sample rate (Hz, default: 48000)
+	-b	--bps		Q15X25 codec bit rate (default: 2500)
+	-f	--fec		forward error correction level (default: 1)
+	-v	--verbose	increase verbosity level (default: 0)
+
+atest exits with 0 on success, or with the number of failed channels
+if any. An exit code of 64 or more indicates an error setting up the audio
+device.
+
+atest depends on libasound and libz. (The latter is used for checksumming
+data packets.)
+
+
+Since we are dealing with analog audio signals, correct mixer settings are
+very important for successful operation. Unfortunately, these settings
+differ considerably between boards both in name and in the appropriate
+levels. The following amixer commands set up the analog audio on the
+Renesas R8A7795 Salvator-X board correctly:
+
+amixer sset "DVC Out" 50%
+amixer sset "Digital Playback Volume1" 50%
+amixer sset "DVC In" 20%
+
+
+If you need to calibrate the mixer settings for a board remotely, you can
+run atest with increased verbosity ("-vvvv") and look for the tune tone
+message from the decoder, which should look something like this:
+
+Tune tones: -0.0Hz/16.2dB  -0.0Hz/16.2dB  +0.0Hz/16.2dB  -0.0Hz/16.3dB  
+
+- If this line is absent, you don't have a connection, or the input or output
+side is muted.
+- If the indicated levels are too low (less than 10-12dB), mixer settings on
+at least one end are too low.
+- If the levels seem okay, but no valid message is received, it is probably
+because of distortion, i.e. the mixer levels on one or both sides are too
+high.
+
+On very noisy links, it may help to increase the level of forward error
+correction; values up to 3 are supported.
