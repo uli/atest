@@ -6,7 +6,10 @@
 #include <stdint.h>
 #include <alloca.h>
 #include <string.h>
+#ifdef LOOPBACK
 #include <alsa/asoundlib.h>
+#endif
+#include <sndfile.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include "header.h"
@@ -24,7 +27,9 @@ int pktput_ptr = 0;
 void carrier_dropped(int chan);
 
 int read_file = 0;
+#ifdef LOOPBACK
 snd_pcm_t *pcm_handle;
+#endif
 int sample_pos = 0;
 
 void resetsample(void)
@@ -89,6 +94,7 @@ int rx_main(int samples)
   int i, j, err;
   struct rxstate s;
 
+#ifdef LOOPBACK
   if ((err = snd_pcm_open(&pcm_handle, opt.adev, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
     fprintf(stderr, "Capture open error: %s\n", snd_strerror(err));
     exit(64);
@@ -110,6 +116,22 @@ int rx_main(int samples)
     fprintf(stderr, "snd_pcm_readi error %s\n", snd_strerror(err));
     exit(66);
   }
+#else
+  SF_INFO sfinfo;
+  memset (&sfinfo, 0, sizeof (sfinfo));
+  sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+  SNDFILE* in = sf_open(opt.out_file, SFM_READ, &sfinfo);
+  if (!in) {
+    fprintf(stderr, "Input file open error\n");
+    exit(64);
+  }
+  int ret;
+  if ((ret = sf_read_short(in, samples_int, SAMP_READ)) != SAMP_READ) {
+    fprintf(stderr, "sf_read_short returned %d\n", ret);
+    exit(66);
+  }
+  sf_close(in);
+#endif
 
   logprintf(2, "read input\n");
   for (j = 0; j < opt.channels; ++j) {

@@ -12,7 +12,11 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include "tbl.h"
+#ifdef LOOPBACK
 #include <alsa/asoundlib.h>
+#else
+#include <sndfile.h>
+#endif
 #include <sys/wait.h>
 #include <getopt.h>
 
@@ -47,7 +51,11 @@ int init_packet(struct packet *pkt, char *msg)
 }
 
 struct options_t opt = {
+#ifdef LOOPBACK
   "default",
+#else
+  "test.wav",
+#endif
   2500,
   48000,
   1,
@@ -60,31 +68,54 @@ void parse_options(int argc, char **argv)
   for (;;) {
     int option_index = 0;
     static struct option long_options[] = {
+#ifdef LOOPBACK
       { "device", required_argument, 0, 'd' },
+#else
+      { "filename", required_argument, 0, 'o'},
+#endif
       { "bps", required_argument, 0, 'b' },
       { "samplerate", required_argument, 0, 's' },
       { "fec", required_argument, 0, 'f' },
       { "channels", required_argument, 0, 'c' },
       { "verbose", no_argument, 0, 'v' },
+#ifndef LOOPBACK
+      { "read", no_argument, 0, 'r' },
+      { "write", no_argument, 0, 'w' },
+#endif
       { 0, 0, 0, 0 }
     };
-    int c = getopt_long(argc, argv, "d:b:s:f:c:v",
+    int c = getopt_long(argc, argv, "d:b:s:f:c:vrw",
                         long_options, &option_index);
     if (c == -1)
       break;
     
     switch (c) {
+#ifdef LOOPBACK
       case 'd': opt.adev = optarg; break;
+#else
+      case 'o': opt.out_file = optarg; break;
+#endif
       case 'b': opt.bps = atoi(optarg); break;
       case 's': opt.samplerate = atoi(optarg); break;
       case 'f': opt.fec = atoi(optarg); break;
       case 'c': opt.channels = atoi(optarg); break;
       case 'v': ++opt.verbose; break;
+#ifndef LOOPBACK
+      case 'r': ++opt.read; break;
+      case 'w': ++opt.write; break;
+#endif
       default:
         fprintf(stderr, "unknown option -%c\n", c);
         exit(32);
     }
   }
+  
+#ifndef LOOPBACK
+  if (!(!!opt.read ^ !!opt.write)) {
+    fprintf(stderr, "Need to specify either --read or --write\n");
+    exit(34);
+  }
+#endif
 }
 
 int do_test(void)
@@ -112,13 +143,18 @@ int do_test(void)
       max_sample_cnt = sample_cnt;
   }
 
+#ifdef LOOPBACK
   if (fork() == 0) {
+#else
+  if (opt.read) {
+#endif
     exit(rx_main(max_sample_cnt));
   }
 
+  int err;
+#ifdef LOOPBACK
   snd_pcm_t *out;
   snd_pcm_sframes_t frames;
-  int err;
   if ((err = snd_pcm_open(&out, opt.adev, SND_PCM_STREAM_PLAYBACK, 0)) < 0) {
     fprintf(stderr, "Playback open error: %s\n", snd_strerror(err));
     exit(67);
@@ -152,6 +188,25 @@ int do_test(void)
     return 97;
   else
     return WEXITSTATUS(err);
+#else
+  SF_INFO sfinfo;
+  memset (&sfinfo, 0, sizeof (sfinfo));
+  sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+  sfinfo.samplerate = opt.samplerate;
+  sfinfo.channels = opt.channels;
+  SNDFILE *out = sf_open(opt.out_file, SFM_WRITE, &sfinfo);
+  if (!out) {
+    fprintf(stderr, "Output file open error\n");
+    exit(67);
+  }
+  if ((err = sf_write_short(out, samples_int, max_sample_cnt + opt.samplerate)) !=
+       max_sample_cnt + opt.samplerate) {
+    fprintf(stderr, "sf_write_short failed: %d\n", err);
+    exit(69);
+  }
+  sf_close(out);
+  return 0;
+#endif
 }
 
 int main(int argc, char **argv)

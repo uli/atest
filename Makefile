@@ -1,3 +1,7 @@
+# Enable to test using a loopback cable connecting the ALSA input and output
+# devices. If disabled, sound will be written to/read from a WAV file.
+#LOOPBACK = 1
+
 OBJS_COMMON = bch.o \
 fec.o \
 filter.o \
@@ -11,7 +15,12 @@ OBJS_ALL = $(OBJS_COMMON) $(OBJS_RX) $(OBJS_TX)
 #CC=arm-linux-gnueabihf-gcc
 CFLAGS = -MMD -O2 -g -Wall
 
+ifneq ($(LOOPBACK),)
+CFLAGS += -DLOOPBACK
 LIBS = -lz -lasound -lm
+else
+LIBS = -lz -lsndfile -lm
+endif
 
 all: atest
 
