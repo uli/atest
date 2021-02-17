@@ -1,8 +1,13 @@
 atest: Analog audio loopback test tool
 
 
-atest allows unattended testing of an analog ALSA device using a
-loopback cable that connects the output to the input on the same board.
+atest serves to test the integrity of an analog audio transmission.  It can
+be compiled with loopback support for use with an analog ALSA device with a
+cable that connects the output to the input on the same board.
+
+Alternatively, it can also be compiled without loopback support and will
+read and write a sound file instead, removing the dependency on ALSA and its
+libraries.
 
 It uses the Q15X25 HAM radio codec to send different messages down the
 channels of the output and decodes what is recevied on the input. If the
@@ -19,12 +24,19 @@ There are several command-line options:
 	-f	--fec		forward error correction level (default: 1)
 	-v	--verbose	increase verbosity level (default: 0)
 
+If compiled without loopback support, the --device option is removed and the
+following options are added:
+
+	-r	--read		read from file
+	-w	--write		write to file
+	-f	--filename	name of WAV file to be written to/read from
+
 atest exits with 0 on success, or with the number of failed channels
 if any. An exit code of 64 or more indicates an error setting up the audio
-device.
+device or accessing the sound file.
 
-atest depends on libasound and libz. (The latter is used for checksumming
-data packets.)
+atest depends on libasound if compiled for loopback testing, and libsndfile
+if not. It also depends on libz, which is used for checksumming data packets.
 
 
 Since we are dealing with analog audio signals, correct mixer settings are
