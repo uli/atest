@@ -84,7 +84,12 @@ void parse_options(int argc, char **argv)
 #endif
       { 0, 0, 0, 0 }
     };
-    int c = getopt_long(argc, argv, "d:b:s:f:c:vrw",
+#ifdef LOOPBACK
+    char *ops = "d:b:s:f:c:vrw";
+#else
+    char *ops = "o:b:s:f:c:vrw";
+#endif
+    int c = getopt_long(argc, argv, ops,
                         long_options, &option_index);
     if (c == -1)
       break;

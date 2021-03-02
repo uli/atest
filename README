@@ -29,7 +29,7 @@ following options are added:
 
 	-r	--read		read from file
 	-w	--write		write to file
-	-f	--filename	name of WAV file to be written to/read from
+	-o	--filename	name of WAV file to be written to/read from
 
 atest exits with 0 on success, or with the number of failed channels
 if any. An exit code of 64 or more indicates an error setting up the audio
