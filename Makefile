@@ -13,6 +13,7 @@ OBJS_TX = newqpsktx.o test_tx.o
 OBJS_ALL = $(OBJS_COMMON) $(OBJS_RX) $(OBJS_TX)
 
 #CC=arm-linux-gnueabihf-gcc
+STRIP = strip
 CFLAGS = -MMD -O2 -g -Wall
 
 ifneq ($(LOOPBACK),)
@@ -26,6 +27,7 @@ all: atest
 
 atest: $(OBJS_ALL)
 	$(CC) -o $@ $^ $(LIBS)
+	$(STRIP) $@
 
 clean:
 	rm -f $(OBJS_ALL) $(OBJS_ALL:%.o=%.d) atest
