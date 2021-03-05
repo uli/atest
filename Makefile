@@ -24,7 +24,7 @@ endif
 
 all: atest
 
-atest: $(OBJS_COMMON) $(OBJS_TX) $(OBJS_RX)
+atest: $(OBJS_ALL)
 	$(CC) -o $@ $^ $(LIBS)
 
 clean:
