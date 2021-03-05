@@ -12,8 +12,9 @@ OBJS_TX = newqpsktx.o test_tx.o
 
 OBJS_ALL = $(OBJS_COMMON) $(OBJS_RX) $(OBJS_TX)
 
-#CC=arm-linux-gnueabihf-gcc
-STRIP = strip
+#CROSS_COMPILE =arm-linux-gnueabihf-
+CC	= $(CROSS_COMPILE)gcc
+STRIP	= $(CROSS_COMPILE)strip
 CFLAGS = -MMD -O2 -g -Wall
 
 ifneq ($(LOOPBACK),)
