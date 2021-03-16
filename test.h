@@ -19,6 +19,7 @@ struct options_t {
   int channels;
   int verbose;
 #ifndef LOOPBACK
+  int samplesize;
   int read;
   int write;
 #endif

@@ -60,7 +60,10 @@ struct options_t opt = {
   48000,
   1,
   2,
-  0
+  0,
+#ifndef LOOPBACK
+  16,
+#endif
 };
 
 void parse_options(int argc, char **argv)
@@ -79,6 +82,7 @@ void parse_options(int argc, char **argv)
       { "channels", required_argument, 0, 'c' },
       { "verbose", no_argument, 0, 'v' },
 #ifndef LOOPBACK
+      { "samplesize", required_argument, 0, 'S' },
       { "read", no_argument, 0, 'r' },
       { "write", no_argument, 0, 'w' },
 #endif
@@ -87,13 +91,13 @@ void parse_options(int argc, char **argv)
 #ifdef LOOPBACK
     char *ops = "d:b:s:f:c:vrw";
 #else
-    char *ops = "o:b:s:f:c:vrw";
+    char *ops = "o:b:s:S:f:c:vrw";
 #endif
     int c = getopt_long(argc, argv, ops,
                         long_options, &option_index);
     if (c == -1)
       break;
-    
+
     switch (c) {
 #ifdef LOOPBACK
       case 'd': opt.adev = optarg; break;
@@ -102,6 +106,9 @@ void parse_options(int argc, char **argv)
 #endif
       case 'b': opt.bps = atoi(optarg); break;
       case 's': opt.samplerate = atoi(optarg); break;
+#ifndef LOOPBACK
+      case 'S':	opt.samplesize = atoi(optarg); break;
+#endif
       case 'f': opt.fec = atoi(optarg); break;
       case 'c': opt.channels = atoi(optarg); break;
       case 'v': ++opt.verbose; break;
@@ -196,9 +203,28 @@ int do_test(void)
 #else
   SF_INFO sfinfo;
   memset (&sfinfo, 0, sizeof (sfinfo));
-  sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+
+  uint32_t sf_format;
+  switch (opt.samplesize) {
+    case 8:
+      sf_format = SF_FORMAT_PCM_U8;
+      break;
+    case 16:
+      sf_format = SF_FORMAT_PCM_16;
+      break;
+    case 24:
+      sf_format = SF_FORMAT_PCM_24;
+      break;
+    default:
+      fprintf(stderr, "Invalid sample size: %d\n", opt.samplesize);
+      exit(35);
+      break;
+  }
+  sfinfo.format = SF_FORMAT_WAV | sf_format;
+
   sfinfo.samplerate = opt.samplerate;
   sfinfo.channels = opt.channels;
+
   SNDFILE *out = sf_open(opt.out_file, SFM_WRITE, &sfinfo);
   if (!out) {
     fprintf(stderr, "Output file open error\n");
