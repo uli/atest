@@ -46,7 +46,7 @@ static complex getsample(struct rxstate *s, int chan)
 	if (s->bufptr >= s->buflen) {
               memcpy(samples, samples_sep[chan] + sample_pos, SymbolLen * 2);
               sample_pos += SymbolLen;
-		
+
               s->rxphase = (s->rxphase + SymbolLen) & 0xffff;
 
               for (i = 0; i < SymbolLen; i++) {

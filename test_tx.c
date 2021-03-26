@@ -57,7 +57,7 @@ struct options_t opt = {
   "test.wav",
 #endif
   2500,
-  48000,
+  -1,
   1,
   2,
   0,
@@ -121,11 +121,26 @@ void parse_options(int argc, char **argv)
         exit(32);
     }
   }
-  
+
 #ifndef LOOPBACK
   if (!(!!opt.read ^ !!opt.write)) {
     fprintf(stderr, "Need to specify either --read or --write\n");
     exit(34);
+  }
+
+  if (opt.samplerate == -1) {
+    if (opt.read) {
+      SNDFILE *out;
+      SF_INFO sfinfo;
+      if (!(out = sf_open(opt.out_file, SFM_READ, &sfinfo))) {
+        fprintf(stderr, "Input file open error\n");
+        exit(64);
+      }
+      opt.samplerate = sfinfo.samplerate;
+      sf_close(out);
+    } else {
+      opt.samplerate = 48000;
+    }
   }
 #endif
 }
@@ -242,7 +257,7 @@ int do_test(void)
 
 int main(int argc, char **argv)
 {
-  
+
   parse_options(argc, argv);
 
   return do_test();
@@ -276,7 +291,7 @@ int send_packet(uint8_t *data, int size, int bps, int fec, int samplerate, int16
   pktget_data = data;
   pktget_ptr = 0;
   pktget_size = size;
-  
+
   int16_t *samples;
   complex *cbuf;
   samples = alloca(s.bufsize * sizeof(int16_t));
@@ -284,7 +299,7 @@ int send_packet(uint8_t *data, int size, int bps, int fec, int samplerate, int16
   s.txdone = 0;
   int count = 0;
   *out = 0;
-  
+
   while (!s.txdone) {
     int n = newqpsktx(&s, cbuf);
     int i;
@@ -292,7 +307,7 @@ int send_packet(uint8_t *data, int size, int bps, int fec, int samplerate, int16
             samples[i] = (cbuf[i].re + cbuf[i].im) * 32768.0;
             //printf("%d %6d [%f + %f i]\n", i, samples[i], cbuf[i].re, cbuf[i].im);
     }
-    
+
     *out = realloc(*out, (count + n) * 2);
     memcpy((*out) + count, samples, n * 2);
     count += n;
