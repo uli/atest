@@ -8,17 +8,15 @@ extern char *msg[MAX_CHANNELS];
 int rx_main(int samples);
 
 struct options_t {
-#ifdef LOOPBACK
-  char *adev;
-#else
-  char *out_file;
-#endif
   int bps;
   int samplerate;
   int fec;
   int channels;
   int verbose;
-#ifndef LOOPBACK
+#ifdef LOOPBACK
+  char *adev;
+#else
+  char *out_file;
   int samplesize;
   int read;
   int write;

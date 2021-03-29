@@ -51,18 +51,16 @@ int init_packet(struct packet *pkt, char *msg)
 }
 
 struct options_t opt = {
+  .bps		= 2500,
+  .samplerate	= -1,
+  .fec		= 1,
+  .channels	= 2,
+  .verbose	= 0,
 #ifdef LOOPBACK
-  "default",
+  .adev		= "default",
 #else
-  "test.wav",
-#endif
-  2500,
-  -1,
-  1,
-  2,
-  0,
-#ifndef LOOPBACK
-  16,
+  .out_file	= "test.wav",
+  .samplesize	= 16,
 #endif
 };
 
@@ -71,17 +69,15 @@ void parse_options(int argc, char **argv)
   for (;;) {
     int option_index = 0;
     static struct option long_options[] = {
-#ifdef LOOPBACK
-      { "device", required_argument, 0, 'd' },
-#else
-      { "filename", required_argument, 0, 'o'},
-#endif
       { "bps", required_argument, 0, 'b' },
       { "samplerate", required_argument, 0, 's' },
       { "fec", required_argument, 0, 'f' },
       { "channels", required_argument, 0, 'c' },
       { "verbose", no_argument, 0, 'v' },
-#ifndef LOOPBACK
+#ifdef LOOPBACK
+      { "device", required_argument, 0, 'd' },
+#else
+      { "filename", required_argument, 0, 'o'},
       { "samplesize", required_argument, 0, 'S' },
       { "read", no_argument, 0, 'r' },
       { "write", no_argument, 0, 'w' },
@@ -89,9 +85,9 @@ void parse_options(int argc, char **argv)
       { 0, 0, 0, 0 }
     };
 #ifdef LOOPBACK
-    char *ops = "d:b:s:f:c:v";
+    char *ops = "b:s:f:c:vd:";
 #else
-    char *ops = "o:b:s:S:f:c:vrw";
+    char *ops = "b:s:f:c:vo:S:rw";
 #endif
     int c = getopt_long(argc, argv, ops,
                         long_options, &option_index);
@@ -99,20 +95,16 @@ void parse_options(int argc, char **argv)
       break;
 
     switch (c) {
+      case 'b': opt.bps = atoi(optarg); break;
+      case 's': opt.samplerate = atoi(optarg); break;
+      case 'f': opt.fec = atoi(optarg); break;
+      case 'c': opt.channels = atoi(optarg); break;
+      case 'v': ++opt.verbose; break;
 #ifdef LOOPBACK
       case 'd': opt.adev = optarg; break;
 #else
       case 'o': opt.out_file = optarg; break;
-#endif
-      case 'b': opt.bps = atoi(optarg); break;
-      case 's': opt.samplerate = atoi(optarg); break;
-#ifndef LOOPBACK
       case 'S':	opt.samplesize = atoi(optarg); break;
-#endif
-      case 'f': opt.fec = atoi(optarg); break;
-      case 'c': opt.channels = atoi(optarg); break;
-      case 'v': ++opt.verbose; break;
-#ifndef LOOPBACK
       case 'r': ++opt.read; break;
       case 'w': ++opt.write; break;
 #endif
