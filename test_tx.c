@@ -89,7 +89,7 @@ void parse_options(int argc, char **argv)
       { 0, 0, 0, 0 }
     };
 #ifdef LOOPBACK
-    char *ops = "d:b:s:f:c:vrw";
+    char *ops = "d:b:s:f:c:v";
 #else
     char *ops = "o:b:s:S:f:c:vrw";
 #endif
