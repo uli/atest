@@ -27,6 +27,7 @@ There are several command-line options:
 If compiled without loopback support, the --device option is removed and the
 following options are added:
 
+	-S	--samplesize	sample bit rate (8/16/24 bit)
 	-r	--read		read from file
 	-w	--write		write to file
 	-o	--filename	name of WAV file to be written to/read from
