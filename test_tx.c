@@ -31,11 +31,7 @@ int send_packet(uint8_t *data, int size, int bps, int fec, int samplerate, int16
 int16_t samples_sep[MAX_CHANNELS][MAX_SAMPLES];
 int16_t samples_int[MAX_CHANNELS*MAX_SAMPLES];
 
-char *msg[MAX_CHANNELS] = {
-"0000000000000000000000000000000000000000000000000000000000000000000",
-"1111111111111111111111111111111111111111111111111111111111111111111",
-};
-
+char msg[MAX_CHANNELS][MSG_LEN + 1];
 
 int init_packet(struct packet *pkt, char *msg)
 {
@@ -54,6 +50,7 @@ struct options_t opt = {
   .bps		= 2500,
   .fec		= 1,
   .channels	= 2,
+  .channel_ids = "01",
   .verbose	= 0,
 #ifdef LOOPBACK
   .adev		= "default",
@@ -75,6 +72,7 @@ void parse_options(int argc, char **argv)
       { "samplerate", required_argument, 0, 's' },
       { "fec", required_argument, 0, 'f' },
       { "channels", required_argument, 0, 'c' },
+      { "channel-ids", required_argument, 0, 'n' },
       { "verbose", no_argument, 0, 'v' },
 #ifdef LOOPBACK
       { "device", required_argument, 0, 'd' },
@@ -87,9 +85,9 @@ void parse_options(int argc, char **argv)
       { 0, 0, 0, 0 }
     };
 #ifdef LOOPBACK
-    char *ops = "b:s:f:c:vd:";
+    char *ops = "b:s:f:c:vd:n:";
 #else
-    char *ops = "b:s:f:c:vo:S:rw";
+    char *ops = "b:s:f:c:vo:S:rwn:";
 #endif
     int c = getopt_long(argc, argv, ops,
                         long_options, &option_index);
@@ -101,6 +99,7 @@ void parse_options(int argc, char **argv)
       case 's': opt.samplerate = atoi(optarg); break;
       case 'f': opt.fec = atoi(optarg); break;
       case 'c': opt.channels = atoi(optarg); break;
+      case 'n': opt.channel_ids = optarg; break;
       case 'v': ++opt.verbose; break;
 #ifdef LOOPBACK
       case 'd': opt.adev = optarg; break;
@@ -114,6 +113,11 @@ void parse_options(int argc, char **argv)
         fprintf(stderr, "unknown option -%c\n", c);
         exit(32);
     }
+  }
+
+  for (int i = 0; i < MAX_CHANNELS; ++i) {
+    memset(msg[i], opt.channel_ids[i], MSG_LEN);
+    msg[i][MSG_LEN] = 0;
   }
 
 #ifndef LOOPBACK

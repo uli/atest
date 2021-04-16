@@ -19,6 +19,8 @@ There are several command-line options:
 
 	-d	--device	ALSA device to use (default: "default")
 	-c	--channels	number of channels to test (default: 2)
+	-n	--channel-ids	one identification digit for each channel
+                                (default: "01")
 	-s	--samplerate	hardware sample rate (Hz, default: 48000)
 	-b	--bps		Q15X25 codec bit rate (default: 2500)
 	-f	--fec		forward error correction level (default: 1)
