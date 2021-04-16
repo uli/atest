@@ -52,15 +52,17 @@ int init_packet(struct packet *pkt, char *msg)
 
 struct options_t opt = {
   .bps		= 2500,
-  .samplerate	= -1,
   .fec		= 1,
   .channels	= 2,
   .verbose	= 0,
 #ifdef LOOPBACK
   .adev		= "default",
+  .samplerate	= 48000,
+  .samplesize	= 16,
 #else
   .out_file	= "test.wav",
-  .samplesize	= 16,
+  .samplerate	= -1,
+  .samplesize	= -1,
 #endif
 };
 
@@ -120,19 +122,39 @@ void parse_options(int argc, char **argv)
     exit(34);
   }
 
-  if (opt.samplerate == -1) {
-    if (opt.read) {
-      SNDFILE *out;
-      SF_INFO sfinfo;
-      if (!(out = sf_open(opt.out_file, SFM_READ, &sfinfo))) {
-        fprintf(stderr, "Input file open error\n");
-        exit(64);
-      }
-      opt.samplerate = sfinfo.samplerate;
-      sf_close(out);
-    } else {
-      opt.samplerate = 48000;
+  if (opt.read) {
+    SNDFILE *out;
+    SF_INFO sfinfo;
+
+    if (opt.samplerate != -1 || opt.samplesize != -1) {
+      fprintf(stderr,
+        "Manual sample rate/size specification not allowed when reading.\n");
+      exit(71);
     }
+
+    if (!(out = sf_open(opt.out_file, SFM_READ, &sfinfo))) {
+      fprintf(stderr, "Input file open error\n");
+      exit(64);
+    }
+
+    opt.samplerate = sfinfo.samplerate;
+
+    switch (sfinfo.format & SF_FORMAT_SUBMASK) {
+      case SF_FORMAT_PCM_U8: opt.samplesize = 8; break;
+      case SF_FORMAT_PCM_16: opt.samplesize = 16; break;
+      case SF_FORMAT_PCM_24: opt.samplesize = 24; break;
+      default:
+        fprintf(stderr, "Unsupported input format %d\n", sfinfo.format);
+        exit(70);
+        break;
+    }
+
+    sf_close(out);
+  } else if (opt.samplerate == -1 || opt.samplesize == -1) {
+    if (opt.samplerate == -1)
+      opt.samplerate = 48000;
+    if (opt.samplesize == -1)
+      opt.samplesize = 16;
   }
 #endif
 }
