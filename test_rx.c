@@ -126,11 +126,12 @@ int rx_main(int samples)
     exit(64);
   }
   int ret;
-  if ((ret = sf_read_short(in, samples_int, SAMP_READ)) != SAMP_READ) {
+  if ((ret = sf_read_short(in, samples_int, SAMP_READ)) <= 0) {
     fprintf(stderr, "sf_read_short returned %d\n", ret);
     exit(66);
   }
   sf_close(in);
+  samples = ret / opt.channels;
 #endif
 
   logprintf(2, "read input\n");
@@ -145,11 +146,11 @@ int rx_main(int samples)
     recv_ok = 0;
     printf("Channel %d: ", j); fflush(stdout);
     init_rx(&s, opt.bps, opt.fec, opt.samplerate, j);
-    
+
     int count = 0;
-    
+
     complex buf[SymbolLen / 2];
-    
+
     synced = 0;
     resetsample();
     while (sample_pos < SAMP_READ) {
@@ -238,7 +239,7 @@ void parse_packet(int chan)
   pkt->header.adler32 = ntohl(pkt->header.adler32);
   pkt->header.offset = ntohs(pkt->header.offset);
   pkt->header.file_id = ntohl(pkt->header.file_id);
-  
+
   if (pkt->header.len > 1024) {
     logprintf(2, "bad packet length (%d)\n", pkt->header.len);
     return;

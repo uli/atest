@@ -186,11 +186,13 @@ int do_test(void)
 
 #ifdef LOOPBACK
   if (fork() == 0) {
-#else
-  if (opt.read) {
-#endif
     exit(rx_main(max_sample_cnt));
   }
+#else
+  if (opt.read) {
+    exit(rx_main(MAX_SAMPLES));
+  }
+#endif
 
   int err;
 #ifdef LOOPBACK
