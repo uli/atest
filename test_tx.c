@@ -261,8 +261,8 @@ int do_test(void)
     fprintf(stderr, "Output file open error\n");
     exit(67);
   }
-  if ((err = sf_write_short(out, samples_int, max_sample_cnt + opt.samplerate)) !=
-       max_sample_cnt + opt.samplerate) {
+  if ((err = sf_write_short(out, samples_int, max_sample_cnt * opt.channels + opt.samplerate)) !=
+       max_sample_cnt * opt.channels + opt.samplerate) {
     fprintf(stderr, "sf_write_short failed: %d\n", err);
     exit(69);
   }
