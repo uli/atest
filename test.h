@@ -1,4 +1,4 @@
-#define MAX_CHANNELS 2
+#define MAX_CHANNELS 5
 #define MAX_SAMPLES 1000000
 #define MSG_LEN 67
 

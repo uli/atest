@@ -50,7 +50,7 @@ struct options_t opt = {
   .bps		= 2500,
   .fec		= 1,
   .channels	= 2,
-  .channel_ids = "01",
+  .channel_ids = "01234",
   .verbose	= 0,
 #ifdef LOOPBACK
   .adev		= "default",
