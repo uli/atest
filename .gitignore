@@ -1,4 +1,5 @@
 *.o
 *.d
 atest
-
+build.ninja
+.ninja_*

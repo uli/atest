@@ -15,6 +15,12 @@ messages match, the test passes. If no valid data was received, or the
 message is not correct, the test fails. This allows detection of
 non-working as well as swapped audio channels.
 
+atest uses the Ninja build system. Run "./configure.sh" to configure the
+build. To compile with loopback support, prepend "LOOPBACK=1". To
+cross-compile, prepend "CROSS_COMPILE=<toolchain prefix>", e.g.
+"CROSS_COMPILE=arm-linux-gnueabihf- ./configure.sh". Then run "ninja" to
+compile the program.
+
 There are several command-line options:
 
 	-d	--device	ALSA device to use (default: "default")
