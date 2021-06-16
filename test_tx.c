@@ -55,7 +55,6 @@ struct options_t opt = {
 #ifdef LOOPBACK
   .adev		= "default",
   .samplerate	= 48000,
-  .samplesize	= 16,
 #else
   .out_file	= "test.wav",
   .samplerate	= -1,
